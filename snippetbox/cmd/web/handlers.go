@@ -9,27 +9,22 @@ import (
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
-	// Check if the requested URL path is "/"
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 
-	// Define the file paths for the templates
 	files := []string{
 		"./ui/html/base.html",
 		"./ui/html/home.html",
 	}
 
-	// Parse the templates
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		log.Print(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
-	// Execute the "home.html" template
 	err = ts.ExecuteTemplate(w, "home.html", nil)
 	if err != nil {
 		log.Print(err.Error())
@@ -62,5 +57,19 @@ func snippetCreate(w http.ResponseWriter, r *http.Request){
 		return;
 	}
 	w.Write([]byte("Create a new snippet"));
+}
+
+func snippetDelete(w http.ResponseWriter, r *http.Request){
+	if r.URL.Path != "/snippet/delete"{
+		http.NotFound(w, r);
+		return;
+	}
+	if r.Method != http.MethodDelete{
+		w.WriteHeader(405);
+		http.Error(w, "only DELETE Method is allowed", http.StatusMethodNotAllowed);
+		//w.Write([]byte("Method now allowed"));
+		return;
+	}
+	w.Write([]byte("Delete a new snippet"));
 }
 

@@ -7,24 +7,23 @@ import (
 	"os"
 )
 
+type application struct{
+	logger *slog.Logger
+}
+
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 
+	
 	// logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil));
 
-	mux := http.NewServeMux()
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	mux.HandleFunc("/", home);
-	mux.HandleFunc("/snippet/view", snippetView);
-	mux.HandleFunc("/snippet/create", snippetCreate);
-	mux.HandleFunc("/snippet/delete", snippetDelete);
-
+	app := &application{
+		logger: logger,
+	}
 	logger.Info("starting server", "addr", slog.String("addr", ":4000"));
-	err := http.ListenAndServe(*addr, mux);
+	err := http.ListenAndServe(*addr, app.routes());
 	logger.Error(err.Error());
 	os.Exit(1);
 	//logger.Printf("Starting server on http://localhost:%s/", *addr)

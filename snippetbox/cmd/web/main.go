@@ -10,7 +10,7 @@ import (
 	"snippetbox.alexedwards.net/internal/models"
 )
 
-type application struct{
+type application struct {
 	logger *slog.Logger
 	snippets *models.SnippetModel
 }

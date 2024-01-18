@@ -4,37 +4,26 @@ import (
 	"snippetbox.alexedwards.net/internal/models" 
 	"errors"
 	"fmt"
-	"html/template"
+	_ "html/template"
 	"net/http"
 	"strconv"
 	_"log"
 )
 
-func(app *application) home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		app.notFound(w)
 		return
 	}
-
-	files := []string{
-		"./ui/html/base.html",
-		"./ui/html/home.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
+	snippets, err := app.snippets.Latest()
 	if err != nil {
-		app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
-	err = ts.ExecuteTemplate(w, "home.html", nil)
-	if err != nil {
-		app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-	// w.Header().Set("Content-type", "application/json")
-	// w.Write([]byte(`{"name":"Alex"}`))
-	//w.Write([]byte("Hello from Snippetbox"))
+	// Use the new render helper.
+	app.render(w, r, http.StatusOK, "home.html", templateData{
+		Snippets: snippets,
+	})
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -43,20 +32,19 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	app.notFound(w)
 	return
 	}
-	// Use the SnippetModel's Get() method to retrieve the data for a
-	// specific record based on its ID. If no matching record is found,
-	// return a 404 Not Found response.
 	snippet, err := app.snippets.Get(id)
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w)
-		} else {
-			app.serverError(w, r, err)
-		}
-		return
+	if errors.Is(err, models.ErrNoRecord) {
+	app.notFound(w)
+	} else {
+	app.serverError(w, r, err)
 	}
-	// Write the snippet data as a plain-text HTTP response body.
-	fmt.Fprintf(w, "%+v", snippet)
+	return
+	}
+	// Use the new render helper.
+	app.render(w, r, http.StatusOK, "view.html", templateData{
+	Snippet: snippet,
+	})
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {

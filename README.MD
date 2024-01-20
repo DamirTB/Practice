@@ -49,3 +49,17 @@ SHOW TABLES;
 ```
 mysql> exit
 ```
+
+- to generate a TLS certificate you need to type the following command
+```
+go run /opt/homebrew/Cellar/go/1.21.6/libexec/src/crypto/tls/generate_cert.go --rsa-bits=2048 --host=localhost
+```
+
+if you're receiving 400 http error, and enable to proceed to the website then, visit the following link
+
+https://localhost:4000/
+
+instead of using 
+
+http://localhost:4000/
+

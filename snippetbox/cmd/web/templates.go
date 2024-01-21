@@ -2,9 +2,11 @@ package main
 
 import (
 	"html/template"
+	_ "io/fs" // New import
 	"path/filepath"
-	"time" // New import
+	"time"
 	"snippetbox.alexedwards.net/internal/models"
+	_ "snippetbox.alexedwards.net/ui" // New import
 )
 
 type templateData struct {
@@ -12,7 +14,9 @@ type templateData struct {
 	Snippet models.Snippet
 	Snippets []models.Snippet
 	Form any
-	Flash string // Add a Flash field to the templateData struct.
+	Flash string
+	IsAuthenticated bool
+	CSRFToken string // Add a CSRFToken field.
 }
 
 func humanDate(t time.Time) string {

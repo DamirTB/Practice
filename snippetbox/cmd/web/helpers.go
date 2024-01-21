@@ -2,18 +2,28 @@ package main
 
 import (
 	"bytes"
-	"errors" // New import
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
-	"github.com/go-playground/form/v4" // New import
+	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf" // New import
 )
+
+func (app *application) isAuthenticated(r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+	return false
+	}
+	return isAuthenticated
+}
 
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
 	CurrentYear: time.Now().Year(),
-	// Add the flash message to the template data, if one exists.
 	Flash: app.sessionManager.PopString(r.Context(), "flash"),
+	IsAuthenticated: app.isAuthenticated(r),
+	CSRFToken: nosurf.Token(r), // Add the CSRF token.
 	}
 }
 // The serverError helper writes a log entry at Error level (including the request

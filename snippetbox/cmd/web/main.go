@@ -1,16 +1,17 @@
 package main
 
 import (
+	"crypto/tls" // New import
 	"database/sql"
 	"flag"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
-	"time" // New import
+	"time"
 	"snippetbox.alexedwards.net/internal/models"
-	"github.com/alexedwards/scs/mysqlstore" // New import
-	"github.com/alexedwards/scs/v2" // New import
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -19,6 +20,7 @@ import (
 type application struct {
 	logger *slog.Logger
 	snippets *models.SnippetModel
+	users *models.UserModel
 	templateCache map[string]*template.Template
 	formDecoder *form.Decoder
 	sessionManager *scs.SessionManager
@@ -50,16 +52,26 @@ func main() {
 	// unsecure HTTP connection).
 	sessionManager.Cookie.Secure = true
 	app := &application{
-	logger: logger,
-	snippets: &models.SnippetModel{DB: db},
-	templateCache: templateCache,
-	formDecoder: formDecoder,
-	sessionManager: sessionManager,
+		logger: logger,
+		snippets: &models.SnippetModel{DB: db},
+		users: &models.UserModel{DB: db},
+		templateCache: templateCache,
+		formDecoder: formDecoder,
+		sessionManager: sessionManager,
 	}
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	srv := &http.Server{
-	Addr: *addr,
-	Handler: app.routes(),
-	ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		Addr: *addr,
+		Handler: app.routes(),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig: tlsConfig,
+		// Add Idle, Read and Write timeouts to the server.
+		IdleTimeout: time.Minute,
+		ReadTimeout: 5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	logger.Info("starting server", "addr", srv.Addr)
 	// Use the ListenAndServeTLS() method to start the HTTPS server. We

@@ -63,3 +63,9 @@ instead of using
 
 http://localhost:4000/
 
+
+to run tests you need to type 
+
+```
+go test -v ./cmd/web
+```

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strconv"
 	"snippetbox.alexedwards.net/internal/models"
-	"snippetbox.alexedwards.net/internal/validator" // New import
-	"github.com/julienschmidt/httprouter" // New import
-	_"strings" // New import
-	_"unicode/utf8" // New import
+	"snippetbox.alexedwards.net/internal/validator" 
+	"github.com/julienschmidt/httprouter" 
+	_"strings" 
+	_"unicode/utf8" 
 )
 
 type snippetCreateForm struct {
@@ -80,25 +80,17 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 		return
 	}
-	// Otherwise add a confirmation flash message to the session confirming that
-	// their signup worked.
 	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
-	// And redirect the user to the login page.
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
-	// Decode the form data into the userLoginForm struct.
-	// Decode the form data into the userLoginForm struct.
 	var form userLoginForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	// Do some validation checks on the form. We check that both email and
-	// password are provided, and also check the format of the email address as
-	// a UX-nicety (in case the user makes a typo).
 	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
 	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
 	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
@@ -108,8 +100,6 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
 		return
 	}
-	// Check whether the credentials are valid. If they're not, add a generic
-	// non-field error message and re-display the login page.
 	id, err := app.users.Authenticate(form.Email, form.Password)
 	if err != nil {
 	if errors.Is(err, models.ErrInvalidCredentials) {
@@ -122,43 +112,27 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 	}
-	// Use the RenewToken() method on the current session to change the session
-	// ID. It's good practice to generate a new session ID when the
-	// authentication state or privilege levels changes for the user (e.g. login
-	// and logout operations).
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	// Add the ID of the current user to the session, so that they are now
-	// 'logged in'.
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
-	// Redirect the user to the create snippet page.
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
-	// Use the RenewToken() method on the current session to change the session
-	// ID again.
 	err := app.sessionManager.RenewToken(r.Context())
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	// Remove the authenticatedUserID from the session data so that the user is
-	// 'logged out'.
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-	// Add a flash message to the session to confirm to the user that they've been
-	// logged out.
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
-	// Redirect the user to the application home page.
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	// Because httprouter matches the "/" path exactly, we can now remove the
-	// manual check of r.URL.Path != "/" from this handler.
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 	app.serverError(w, r, err)
@@ -192,10 +166,6 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	// Initialize a new createSnippetForm instance and pass it to the template.
-	// Notice how this is also a great opportunity to set any default or
-	// 'initial' values for the form --- here we set the initial value for the
-	// snippet expiry to 365 days.
 	data.Form = snippetCreateForm{
 	Expires: 365,
 	}
@@ -224,8 +194,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	app.serverError(w, r, err)
 	return
 	}
-	// Use the Put() method to add a string value ("Snippet successfully
-	// created!") and the corresponding key ("flash") to the session data.
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }

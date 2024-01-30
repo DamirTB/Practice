@@ -1,7 +1,7 @@
 package main
 import (
 "net/http"
-"snippetbox.alexedwards.net/ui" // New import
+"snippetbox.alexedwards.net/ui" 
 "github.com/julienschmidt/httprouter"
 "github.com/justinas/alice"
 )
@@ -12,7 +12,6 @@ func (app *application) routes() http.Handler {
 	})
 	fileServer := http.FileServer(http.FS(ui.Files))
 	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
-	// Add a new GET /ping route.
 	router.HandlerFunc(http.MethodGet, "/ping", ping)
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
